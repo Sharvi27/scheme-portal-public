@@ -242,7 +242,7 @@ function ProfileForm({ profile, onChange, onSearch, loading }) {
         <BoolToggle fieldKey="has_bank_account" label="Has Bank Account?" />
         <BoolToggle fieldKey="is_widow" label="Widow?" />
         <BoolToggle fieldKey="is_disabled" label="Disabled?" />
-        <BoolToggle fieldKey="dbt" label="DBT Registered?" />
+        <BoolToggle fieldKey="dbt" label="DBT?" />
       </div>
 
       <button onClick={onSearch} disabled={loading} style={{

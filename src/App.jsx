@@ -28,13 +28,13 @@ function userMeetsRule(userProfile, attribute_key, rule) {
       if (!rule.allowed || rule.allowed.includes('any')) return true
       return rule.allowed.includes(val)
     }
-    case 'sector': {
+    case 'sector':
+    case 'state': {
       if (!rule.allowed || rule.allowed.includes('any')) return true
       return rule.allowed.includes(val)
     }
     case 'is_widow':
     case 'has_bank_account':
-    case 'is_delhi_resident':
     case 'is_disabled': {
       // rule.required: true means user must have this
       // rule.required: false means user must NOT have this
@@ -219,7 +219,26 @@ function ProfileForm({ profile, onChange, onSearch, loading }) {
 
       {/* Boolean toggles */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginTop: 16 }}>
-        <BoolToggle fieldKey="is_delhi_resident" label="Delhi Resident?" />
+        <div style={{ gridColumn: '1 / -1' }}>
+          <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--navy)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>State / Location</span>
+          <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+            {[['', 'Not Specified'], ['delhi', '🏙️ Delhi'], ['haryana', '🟢 Haryana'], ['other', '🗺️ Other']].map(([v, l]) => (
+              <button key={v} onClick={() => onChange('state', v)} style={{
+                flex: 1, padding: '8px 4px', borderRadius: 'var(--radius-sm)',
+                border: '1.5px solid', fontSize: '0.82rem', fontWeight: 500,
+                borderColor: profile.state === v ? 'var(--saffron)' : 'var(--border)',
+                background: profile.state === v ? 'var(--saffron)' : 'white',
+                color: profile.state === v ? 'white' : 'var(--text-muted)',
+                transition: 'all 0.15s', cursor: 'pointer',
+              }}>{l}</button>
+            ))}
+          </div>
+          {profile.state && profile.state !== 'other' && (
+            <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
+              Indian Govt schemes will always appear regardless of location.
+            </p>
+          )}
+        </div>
         <BoolToggle fieldKey="has_bank_account" label="Has Bank Account?" />
         <BoolToggle fieldKey="is_widow" label="Widow?" />
         <BoolToggle fieldKey="is_disabled" label="Disabled?" />
@@ -368,7 +387,7 @@ function formatRule(key, rule) {
 
 const defaultProfile = {
   age: '', gender: '', annual_income: '', income_category: '', sector: '',
-  is_widow: null, has_bank_account: null, is_delhi_resident: null, is_disabled: null,
+  is_widow: null, has_bank_account: null, is_disabled: null, state: '',
 }
 
 export default function App() {

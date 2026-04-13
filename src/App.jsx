@@ -186,18 +186,23 @@ function ProfileForm({ profile, onChange, onSearch, loading }) {
             onFocus={handleFocus} onBlur={handleBlur}
             style={inputStyle}
           />
+          <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>≤₹1L = BPL · ₹1L–₹3L = Low Income · &gt;₹3L = General</p>
         </div>
 
         {/* Income Category */}
         <div>
-          <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--navy)', letterSpacing: '0.04em', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Income Category</label>
+          <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--navy)', letterSpacing: '0.04em', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>
+            Income Category {profile.annual_income && <span style={{ color: 'var(--saffron)', fontSize: '0.7rem', fontWeight: 500 }}>(auto-set)</span>}
+          </label>
           <select value={profile.income_category || ''} onChange={e => onChange('income_category', e.target.value)}
-            onFocus={handleFocus} onBlur={handleBlur} style={inputStyle}>
+            onFocus={handleFocus} onBlur={handleBlur}
+            style={{ ...inputStyle, background: profile.annual_income ? '#fffbf5' : 'white', borderColor: profile.annual_income ? 'var(--saffron)' : 'var(--border)' }}>
             <option value="">Select</option>
             <option value="bpl">BPL (Below Poverty Line)</option>
             <option value="low_income">Low Income</option>
             <option value="general">General</option>
           </select>
+          {profile.annual_income && <p style={{ fontSize: '0.72rem', color: 'var(--saffron)', marginTop: 4 }}>Auto-derived from income. Select manually to override (clears income).</p>}
         </div>
 
         {/* Sector */}
@@ -406,7 +411,23 @@ export default function App() {
     load()
   }, [])
 
-  const handleChange = (key, val) => setProfile(p => ({ ...p, [key]: val }))
+  const deriveCategory = (income) => {
+    const n = Number(income)
+    if (!income || isNaN(n)) return ""
+    if (n <= 100000) return "bpl"
+    if (n <= 300000) return "low_income"
+    return "general"
+  }
+
+  const handleChange = (key, val) => {
+    if (key === "annual_income") {
+      setProfile(p => ({ ...p, annual_income: val, income_category: deriveCategory(val) }))
+    } else if (key === "income_category") {
+      setProfile(p => ({ ...p, income_category: val, annual_income: "" }))
+    } else {
+      setProfile(p => ({ ...p, [key]: val }))
+    }
+  }
 
   const handleSearch = useCallback(() => {
     setLoading(true)

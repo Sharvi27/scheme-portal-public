@@ -343,6 +343,11 @@ function SchemeModal({ scheme, onClose }) {
           <Section title="Benefits">
             <p style={{ fontSize: '0.93rem', color: 'var(--text)', lineHeight: 1.7, whiteSpace: 'pre-line' }}>{scheme.benefits}</p>
           </Section>
+          {scheme.documents_required && (
+            <Section title="Documents Required">
+              <p style={{ fontSize: '0.93rem', color: 'var(--text)', lineHeight: 1.7, whiteSpace: 'pre-line' }}>{scheme.documents_required}</p>
+            </Section>
+          )}
           {scheme.eligibility && scheme.eligibility.length > 0 && (
             <Section title="Eligibility Criteria">
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

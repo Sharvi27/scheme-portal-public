@@ -242,6 +242,7 @@ function ProfileForm({ profile, onChange, onSearch, loading }) {
         <BoolToggle fieldKey="has_bank_account" label="Has Bank Account?" />
         <BoolToggle fieldKey="is_widow" label="Widow?" />
         <BoolToggle fieldKey="is_disabled" label="Disabled?" />
+        <BoolToggle fieldKey="dbt" label="DBT Registered?" />
       </div>
 
       <button onClick={onSearch} disabled={loading} style={{
@@ -392,7 +393,7 @@ function formatRule(key, rule) {
 
 const defaultProfile = {
   age: '', gender: '', annual_income: '', income_category: '', sector: '',
-  is_widow: null, has_bank_account: null, is_disabled: null, state: '',
+  is_widow: null, has_bank_account: null, is_disabled: null, dbt: null, state: '',
 }
 
 export default function App() {

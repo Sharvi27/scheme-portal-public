@@ -245,15 +245,19 @@ function ProfileForm({ profile, onChange, onSearch, loading }) {
 }
 
 function IssuingBadge({ issuing_body }) {
-  const isDel = issuing_body === 'delhi'
+  const config = {
+    delhi:   { bg: 'rgba(232,131,42,0.12)', color: 'var(--saffron)', label: '🏙️ Delhi Govt' },
+    central: { bg: 'rgba(15,32,68,0.08)',   color: 'var(--navy)',    label: '🇮🇳 Indian Govt' },
+    haryana: { bg: 'rgba(21,128,61,0.10)',  color: '#15803d',        label: '🟢 Haryana Govt' },
+  }
+  const c = config[issuing_body] || config.central
   return (
     <span style={{
       padding: '3px 10px', borderRadius: 20, fontSize: '0.72rem', fontWeight: 600,
-      background: isDel ? 'rgba(232,131,42,0.12)' : 'rgba(15,32,68,0.08)',
-      color: isDel ? 'var(--saffron)' : 'var(--navy)',
+      background: c.bg, color: c.color,
       textTransform: 'uppercase', letterSpacing: '0.05em',
     }}>
-      {isDel ? '🏙️ Delhi Govt' : '🇮🇳 Central Govt'}
+      {c.label}
     </span>
   )
 }
@@ -476,8 +480,8 @@ export default function App() {
                   {displayed.length} scheme{displayed.length !== 1 ? 's' : ''} found
                   {filterBody !== 'all' && <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}> (filtered)</span>}
                 </p>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  {['all', 'delhi', 'central'].map(b => (
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {[['all','All'], ['delhi','🏙️ Delhi'], ['central','🇮🇳 Indian'], ['haryana','🟢 Haryana']].map(([b, label]) => (
                     <button key={b} onClick={() => setFilterBody(b)} style={{
                       padding: '6px 14px', borderRadius: 20, fontSize: '0.8rem', fontWeight: 600,
                       border: '1.5px solid', cursor: 'pointer',
@@ -485,7 +489,7 @@ export default function App() {
                       background: filterBody === b ? 'var(--navy)' : 'white',
                       color: filterBody === b ? 'white' : 'var(--text-muted)',
                     }}>
-                      {b === 'all' ? 'All' : b === 'delhi' ? '🏙️ Delhi' : '🇮🇳 Central'}
+                      {label}
                     </button>
                   ))}
                 </div>

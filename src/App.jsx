@@ -29,14 +29,14 @@ function userMeetsRule(userProfile, attribute_key, rule) {
       return rule.allowed.includes(val)
     }
     case 'sector':
-    case 'state': {
+    case 'state':
+    case 'scheme_type': {
       if (!rule.allowed || rule.allowed.includes('any')) return true
       return rule.allowed.includes(val)
     }
     case 'is_widow':
     case 'has_bank_account':
-    case 'is_disabled':
-    case 'dbt': {
+    case 'is_disabled': {
       // rule.required: true means user must have this
       // rule.required: false means user must NOT have this
       if (rule.required === true && val !== true) return false
@@ -243,7 +243,23 @@ function ProfileForm({ profile, onChange, onSearch, loading }) {
         <BoolToggle fieldKey="has_bank_account" label="Has Bank Account?" />
         <BoolToggle fieldKey="is_widow" label="Widow?" />
         <BoolToggle fieldKey="is_disabled" label="Disabled?" />
-        <BoolToggle fieldKey="dbt" label="DBT Registered?" />
+      </div>
+
+      {/* Scheme Type */}
+      <div style={{ marginTop: 16 }}>
+        <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--navy)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Scheme Type</span>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 6 }}>
+          {[['', 'Any'], ['dbt', 'DBT'], ['insurance', 'Insurance'], ['subsidy', 'Subsidy'], ['kind', 'Kind'], ['livelihood', 'Livelihood']].map(([v, l]) => (
+            <button key={v} onClick={() => onChange('scheme_type', v)} style={{
+              padding: '6px 14px', borderRadius: 20, border: '1.5px solid', fontSize: '0.82rem',
+              fontWeight: 500, cursor: 'pointer',
+              borderColor: profile.scheme_type === v ? 'var(--saffron)' : 'var(--border)',
+              background: profile.scheme_type === v ? 'var(--saffron)' : 'white',
+              color: profile.scheme_type === v ? 'white' : 'var(--text-muted)',
+              transition: 'all 0.15s',
+            }}>{l}</button>
+          ))}
+        </div>
       </div>
 
       <button onClick={onSearch} disabled={loading} style={{
@@ -394,7 +410,7 @@ function formatRule(key, rule) {
 
 const defaultProfile = {
   age: '', gender: '', annual_income: '', income_category: '', sector: '',
-  is_widow: null, has_bank_account: null, is_disabled: null, dbt: null, state: '',
+  is_widow: null, has_bank_account: null, is_disabled: null, state: '', scheme_type: '',
 }
 
 export default function App() {

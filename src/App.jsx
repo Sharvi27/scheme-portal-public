@@ -35,7 +35,8 @@ function userMeetsRule(userProfile, attribute_key, rule) {
     }
     case 'is_widow':
     case 'has_bank_account':
-    case 'is_disabled': {
+    case 'is_disabled':
+    case 'dbt': {
       // rule.required: true means user must have this
       // rule.required: false means user must NOT have this
       if (rule.required === true && val !== true) return false
@@ -242,7 +243,7 @@ function ProfileForm({ profile, onChange, onSearch, loading }) {
         <BoolToggle fieldKey="has_bank_account" label="Has Bank Account?" />
         <BoolToggle fieldKey="is_widow" label="Widow?" />
         <BoolToggle fieldKey="is_disabled" label="Disabled?" />
-        <BoolToggle fieldKey="dbt" label="DBT?" />
+        <BoolToggle fieldKey="dbt" label="DBT Registered?" />
       </div>
 
       <button onClick={onSearch} disabled={loading} style={{

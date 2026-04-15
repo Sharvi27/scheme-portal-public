@@ -57,3 +57,16 @@ select, input {
 
 .fade-up { animation: fadeUp 0.4s ease forwards; }
 .fade-in { animation: fadeIn 0.3s ease forwards; }
+
+/* ── Mobile responsiveness ── */
+@media (max-width: 700px) {
+  main {
+    grid-template-columns: 1fr !important;
+    padding: 16px !important;
+  }
+
+  /* Unstick the form on mobile so it doesn't overlap content */
+  main > div:first-child {
+    position: static !important;
+  }
+}

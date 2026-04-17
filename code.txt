@@ -1,0 +1,133 @@
+# ============================================================
+# Portfolio Optimization — Numerical Methods Comparison
+# Numerical Optimization Group Project
+# ============================================================
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.linalg import solve, cho_factor, cho_solve
+ 
+# ---- Problem Setup ----
+mu = np.array([0.18, 0.12, 0.10, 0.14, 0.08])  # expected returns
+sigma = np.array([0.25, 0.18, 0.14, 0.22, 0.11])  # std deviations
+# Correlation matrix
+corr = np.array([[1.00, 0.45, 0.20, 0.35, 0.15],
+                 [0.45, 1.00, 0.30, 0.40, 0.25],
+                 [0.20, 0.30, 1.00, 0.18, 0.22],
+                 [0.35, 0.40, 0.18, 1.00, 0.30],
+                 [0.15, 0.25, 0.22, 0.30, 1.00]])
+Sigma = np.outer(sigma, sigma) * corr  # covariance matrix
+n = len(mu)  # number of assets
+ones = np.ones(n)
+r_target = 0.10  # minimum required return
+ 
+# ---- Objective and Gradient ----
+def portfolio_var(w):    return w @ Sigma @ w
+def grad_var(w):         return 2 * Sigma @ w
+def hessian_var():       return 2 * Sigma  # constant
+ 
+# ---- Projection onto Probability Simplex ----
+def project_simplex(v):
+    u = np.sort(v)[::-1]
+    cssv = np.cumsum(u)
+    rho = np.where(u > (cssv - 1) / (np.arange(n)+1))[0][-1]
+    theta = (cssv[rho] - 1) / (rho + 1)
+    return np.maximum(v - theta, 0)
+ 
+# ---- METHOD 1: Projected Gradient Descent ----
+def gradient_descent(alpha=0.5, max_iter=5000, tol=1e-6):
+    w = np.ones(n) / n  # start: equal weights
+    history = {'f': [], 'grad_norm': []}
+    for k in range(max_iter):
+        g = grad_var(w)
+        history['f'].append(portfolio_var(w))
+        history['grad_norm'].append(np.linalg.norm(g))
+        if np.linalg.norm(g) < tol: break
+        w = project_simplex(w - alpha * g)
+    return w, history
+ 
+# ---- METHOD 2: Newton's Method (KKT System) ----
+def newton_portfolio():
+    # Solve KKT system: [2S, 1; 1^T, 0][w; lam] = [0; 1]
+    H = hessian_var()
+    KKT = np.block([[H, ones.reshape(-1,1)],
+                    [ones.reshape(1,-1), [[0]]]])
+    rhs = np.append(np.zeros(n), 1.0)
+    sol = solve(KKT, rhs)
+    w_star = sol[:n]; lam = sol[n]
+    w_star = project_simplex(w_star)  # enforce non-negativity
+    return w_star, lam
+ 
+# ---- METHOD 3: BFGS (from scipy) ----
+from scipy.optimize import minimize
+def bfgs_portfolio():
+    w0 = np.ones(n) / n
+    constraints = [{'type': 'eq', 'fun': lambda w: np.sum(w)-1,
+                    'jac': lambda w: ones},
+                   {'type': 'ineq', 'fun': lambda w: mu@w - r_target,
+                    'jac': lambda w: mu}]
+    bounds = [(0, 1)] * n  # long-only
+    res = minimize(portfolio_var, w0, jac=grad_var,
+                  method='SLSQP', bounds=bounds,  # BFGS-based
+                  constraints=constraints,
+                  options={'ftol': 1e-12, 'maxiter': 1000})
+    return res.x, res
+ 
+# ---- METHOD 4: Penalty Method ----
+def penalty_method(rho_seq=[1,10,100,1000,10000], tol=1e-6):
+    w = np.ones(n) / n
+    history = {'f': [], 'grad_norm': [], 'feasibility': []}
+    for rho in rho_seq:
+        def f_pen(w):
+            eq_viol = (ones @ w - 1)**2
+            ineq_viol = np.sum(np.minimum(0, w)**2)
+            return portfolio_var(w) + rho/2*(eq_viol + ineq_viol)
+        res = minimize(f_pen, w, method='L-BFGS-B')
+        w = res.x
+        history['f'].append(portfolio_var(w))
+        history['feasibility'].append(abs(ones @ w - 1))
+    return w, history
+ 
+# ---- METHOD 5: Gauss-Newton (for nonlinear LS formulation) ----
+def gauss_newton(max_iter=50, tol=1e-10):
+    # Solve KKT stationarity conditions as nonlinear system
+    # r(w,lam) = [2*Sigma*w + lam*ones; ones^T*w - 1]
+    x = np.append(np.ones(n)/n, 0.01)  # [w; lambda]
+    history = {'res_norm': []}
+    for k in range(max_iter):
+        w, lam = x[:n], x[n]
+        r = np.append(2*Sigma@w + lam*ones, ones@w - 1)
+        J = np.block([[2*Sigma, ones.reshape(-1,1)],
+                     [ones.reshape(1,-1), [[0]]]])
+        history['res_norm'].append(np.linalg.norm(r))
+        if np.linalg.norm(r) < tol: break
+        p = solve(J.T @ J, -J.T @ r)  # GN step
+        x = x + p
+    w_star = project_simplex(x[:n])
+    return w_star, history
+ 
+# ---- RUN ALL METHODS ----
+w_gd, h_gd = gradient_descent(alpha=0.5)
+w_newton, lam = newton_portfolio()
+w_bfgs, res_bfgs = bfgs_portfolio()
+w_pen, h_pen = penalty_method()
+w_gn, h_gn = gauss_newton()
+ 
+# ---- RESULTS SUMMARY ----
+methods = {'GD': w_gd, 'Newton': w_newton, 'BFGS': w_bfgs,
+           'Penalty': w_pen, 'GN': w_gn}
+for name, w in methods.items():
+    print(f'{name}: f={portfolio_var(w):.6f}, ret={mu@w:.4f}, sum={sum(w):.4f}')
+ 
+# ---- PLOT: Objective vs Iterations ----
+plt.figure(figsize=(12, 5))
+plt.subplot(1,2,1)
+plt.semilogy(h_gd['f'], label='Gradient Descent')
+plt.semilogy(h_gn['res_norm'], label='Gauss-Newton')
+plt.xlabel('Iteration'); plt.ylabel('Objective (log scale)')
+plt.legend(); plt.title('Convergence: Objective vs Iterations')
+plt.subplot(1,2,2)
+plt.semilogy(h_gd['grad_norm'], label='GD grad norm')
+plt.xlabel('Iteration'); plt.ylabel('Gradient Norm (log scale)')
+plt.legend(); plt.title('Convergence: Gradient Norm vs Iterations')
+plt.tight_layout(); plt.savefig('portfolio_convergence.png', dpi=150)
+plt.show() 

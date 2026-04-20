@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { supabase } from './supabase.js'
+import { loadSchemes } from './db.js'
+import { syncFromSupabase } from './sync.js'
 
 // ─── Income category hierarchy ────────────────────────────────────────────────
 const INCOME_HIERARCHY = { bpl: 0, low_income: 1, general: 2 }
@@ -510,30 +512,56 @@ export default function App() {
   const [selected, setSelected] = useState(null)
   const [filterBody, setFilterBody] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const [syncStatus, setSyncStatus] = useState(null) // 'syncing' | 'updated' | 'offline' | null
 
   useEffect(() => {
-    async function load() {
-      const { data: schemes, error: err1 } = await supabase
-        .from('schemes')
-        .select('*, scheme_eligibility(rule, attribute_definitions(key, label))')
-        .eq('is_active', true)
-        .order('name')
+    async function init() {
+      // 1. Load from IndexedDB immediately (works offline)
+      try {
+        const local = await loadSchemes()
+        if (local.length > 0) {
+          setAllSchemes(local)
+          setSchemesReady(true)
+        }
+      } catch (_) {}
 
-      if (err1) { setError(err1.message); return }
-
-      const enriched = schemes.map(s => ({
-        ...s,
-        eligibility: (s.scheme_eligibility || []).map(e => ({
-          attribute_key: e.attribute_definitions?.key,
-          attribute_label: e.attribute_definitions?.label,
-          rule: e.rule,
-        })).filter(e => e.attribute_key),
-      }))
-
-      setAllSchemes(enriched)
+      // 2. If online, sync from Supabase in background
+      if (navigator.onLine) {
+        setSyncStatus('syncing')
+        const result = await syncFromSupabase()
+        if (result.status === 'updated') {
+          const fresh = await loadSchemes()
+          setAllSchemes(fresh)
+          setSyncStatus('updated')
+          setTimeout(() => setSyncStatus(null), 3000)
+        } else if (result.status === 'error') {
+          setError(result.message)
+          setSyncStatus(null)
+        } else {
+          setSyncStatus(null)
+        }
+      } else {
+        setSyncStatus('offline')
+      }
       setSchemesReady(true)
     }
-    load()
+    init()
+
+    // Re-sync automatically when coming back online
+    const handleOnline = async () => {
+      setSyncStatus('syncing')
+      const result = await syncFromSupabase({ force: true })
+      if (result.status === 'updated') {
+        const fresh = await loadSchemes()
+        setAllSchemes(fresh)
+        setSyncStatus('updated')
+        setTimeout(() => setSyncStatus(null), 3000)
+      } else {
+        setSyncStatus(null)
+      }
+    }
+    window.addEventListener('online', handleOnline)
+    return () => window.removeEventListener('online', handleOnline)
   }, [])
 
   const deriveCategory = (income) => {
@@ -621,6 +649,22 @@ export default function App() {
 
         {/* Right: results */}
         <div>
+          {syncStatus === 'syncing' && (
+            <div style={{ background: 'rgba(15,32,68,0.06)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '10px 16px', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ width: 14, height: 14, border: '2px solid var(--border)', borderTopColor: 'var(--navy)', borderRadius: '50%', animation: 'spin 0.7s linear infinite', flexShrink: 0 }} />
+              Checking for updates...
+            </div>
+          )}
+          {syncStatus === 'updated' && (
+            <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 'var(--radius-sm)', padding: '10px 16px', fontSize: '0.85rem', color: '#15803d', marginBottom: 12 }}>
+              ✓ Schemes updated with latest data
+            </div>
+          )}
+          {syncStatus === 'offline' && (
+            <div style={{ background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: 'var(--radius-sm)', padding: '10px 16px', fontSize: '0.85rem', color: '#92400e', marginBottom: 12 }}>
+              📴 You're offline — showing saved data. Will sync automatically when back online.
+            </div>
+          )}
           {error && (
             <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 'var(--radius-sm)', padding: '14px 18px', color: '#b91c1c', fontSize: '0.9rem', marginBottom: 16 }}>
               ⚠️ {error}

@@ -952,8 +952,8 @@ export default function App() {
         <div style={{ marginTop: 2 }}>
           Created by{' '}
 	  <a href="https://www.linkedin.com/in/sharvilak-srivastav" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'underline' }}>Sharvilak Srivastav</a>
-          <a href="https://head-held-high.org" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'underline' }}>Head Held High Foundation</a>
 	  {' '}for{' '}
+          <a href="https://head-held-high.org" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'underline' }}>Head Held High Foundation</a>
         </div>
       </footer>
     </div>

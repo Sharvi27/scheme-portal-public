@@ -949,6 +949,10 @@ export default function App() {
           <a href="https://www.india.gov.in" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'underline' }}>India.gov.in</a>
           {' '}and respective state government portals · Always verify details on official portals before applying
         </div>
+        <div style={{ marginTop: 2 }}>
+          Created by Sharvilak Srivastav for{' '}
+          <a href="https://www.headheldhigh.com" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'underline' }}>Head Held High Foundation</a>
+        </div>
       </footer>
     </div>
   )

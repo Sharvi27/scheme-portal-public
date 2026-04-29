@@ -951,7 +951,7 @@ export default function App() {
         </div>
         <div style={{ marginTop: 2 }}>
           Created by Sharvilak Srivastav for{' '}
-          <a href="https://www.headheldhigh.com" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'underline' }}>Head Held High Foundation</a>
+          <a href="https://head-held-high.org" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'underline' }}>Head Held High Foundation</a>
         </div>
       </footer>
     </div>

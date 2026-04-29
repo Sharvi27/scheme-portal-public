@@ -950,8 +950,10 @@ export default function App() {
           {' '}and respective state government portals · Always verify details on official portals before applying
         </div>
         <div style={{ marginTop: 2 }}>
-          Created by Sharvilak Srivastav for{' '}
+          Created by{' '}
+	  <a href="https://www.linkedin.com/in/sharvilak-srivastav" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'underline' }}>Sharvilak Srivastav</a>
           <a href="https://head-held-high.org" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'underline' }}>Head Held High Foundation</a>
+	  {' '}for{' '}
         </div>
       </footer>
     </div>
